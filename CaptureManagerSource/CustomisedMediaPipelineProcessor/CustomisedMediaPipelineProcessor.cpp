@@ -59,7 +59,6 @@ namespace CaptureManager
 				mPtrCustomisedMediaSession(aPtrCustomisedMediaSession),
 				mCurrentState(State::None),
 				mStopWaitingTime(5),
-				mCurrentTime(0),
 				m_processSampleAccess(false)
 			{
 				HRESULT lresult;
@@ -139,6 +138,9 @@ namespace CaptureManager
 						break;
 					case ICustomisedRequest::SourceStreamRequest:
 						lresult = handleSourceStreamRequest(aPtrAsyncResult, lICustomisedRequest);
+						break;
+					case ICustomisedRequest::SourceStreamPushNewSampleRequest:
+						lresult = handleSourceStreamPushNewSampleRequest(aPtrAsyncResult, lICustomisedRequest);
 						break;
 					case ICustomisedRequest::StreamSinkRequest:
 						lresult = handleStreamSinkRequest(aPtrAsyncResult, lICustomisedRequest);
@@ -252,6 +254,10 @@ namespace CaptureManager
 						mSampleTimes.push_back(0);
 
 						mPrevSampleTimes.push_back(0);
+
+						lSourceStream->RequestSample(nullptr);
+
+						lSourceStream->RequestSample(nullptr);
 
 						lSourceStream->RequestSample(nullptr);
 					}
@@ -384,25 +390,62 @@ namespace CaptureManager
 							lOutputStreamIndex,
 							&lDownStreamTopologyNode,
 							&lInputIndex);
-						
-						CComPtrCustom<ICustomisedRequest> lPushNewSampleRequest = new (std::nothrow) CustomisedRequest(
-							ICustomisedRequest::PushNewSampleRequest,
-							lReadySourceSample,
-							lDownStreamTopologyNode);
 
-						LOG_CHECK_PTR_MEMORY(lPushNewSampleRequest);
 
-						lresult = mPtrCustomisedMediaSession->checkInitBarier(lSourceStream);
+						CComPtrCustom<IMFSample> lDownStreamSample;
 
-						if (FAILED(lresult))
+						lDownStreamSample = lReadySourceSample;
+
+						if (mGUIDMajorType == MFMediaType_Video &&
+							mGUIDSubType == MFVideoFormat_H264)
 						{
-							lSourceStream->RequestSample(nullptr);
+							lDownStreamSample.Release();
 
-							lresult = S_OK;
+							LOG_INVOKE_MF_FUNCTION(MFCreateSample, &lDownStreamSample);
 
-							break;
+							lReadySourceSample->CopyAllItems(lDownStreamSample);
+
+							CComPtrCustom<IMFMediaBuffer> lMediaBuffer;
+
+							lReadySourceSample->GetBufferByIndex(0, &lMediaBuffer);
+
+							if (lMediaBuffer)
+							{
+								DWORD lTotalLength;
+
+								LOG_INVOKE_MF_METHOD(GetTotalLength, lReadySourceSample, &lTotalLength);
+
+								CComPtrCustom<IMFMediaBuffer> lDownStreamMediaBuffer;
+
+								LOG_INVOKE_MF_FUNCTION(MFCreateMemoryBuffer, lTotalLength, &lDownStreamMediaBuffer);
+
+								LOG_CHECK_PTR_MEMORY(lDownStreamMediaBuffer);
+
+								LOG_INVOKE_MF_METHOD(CopyToBuffer, lReadySourceSample, lDownStreamMediaBuffer);
+															   
+								lDownStreamSample->AddBuffer(lDownStreamMediaBuffer);
+
+								LONGLONG lSampleDuration;
+
+								lReadySourceSample->GetSampleDuration(&lSampleDuration);
+
+								LONGLONG lSampleTimeDevice;
+
+								lReadySourceSample->GetSampleTime(&lSampleTimeDevice);
+
+								DWORD lFlags;
+
+								lReadySourceSample->GetSampleFlags(&lFlags);
+
+
+								lDownStreamSample->SetSampleDuration(lSampleDuration);
+
+								lDownStreamSample->SetSampleTime(lSampleTimeDevice);
+
+								lDownStreamSample->SetSampleFlags(lFlags);
+							}
 						}
-						
+
 						UINT32 lMediaStreamIndex;
 
 						LOG_INVOKE_MF_METHOD(GetUINT32,
@@ -410,53 +453,26 @@ namespace CaptureManager
 							MediaStreamID,
 							&lMediaStreamIndex);
 						
-						auto lSampleTime = mSampleTimes[lMediaStreamIndex];
+						CComPtrCustom<ICustomisedRequest> lPushNewSampleRequest = new (std::nothrow) CustomisedRequest(
+							ICustomisedRequest::SourceStreamPushNewSampleRequest,
+							lDownStreamSample,
+							lDownStreamTopologyNode,
+							lMediaStreamIndex);
 
-						auto lPrevSampleTimes = mPrevSampleTimes[lMediaStreamIndex];
-
-						LONGLONG lSampleDuration;
-
-						LOG_INVOKE_MF_METHOD(GetSampleDuration, lReadySourceSample, &lSampleDuration);
-
-						LONGLONG lSampleTimeDevice;
-
-						LOG_INVOKE_MF_METHOD(GetSampleTime, lReadySourceSample, &lSampleTimeDevice);
-
-						UINT32 Discontinuity = FALSE;
-
-						do
-						{
-							LOG_INVOKE_MF_METHOD(GetUINT32,
-								lReadySourceSample,
-								MFSampleExtension_Discontinuity,
-								&Discontinuity);
-
-						} while (false);
-
-
-						if (mGUIDMajorType == MFMediaType_Video)
-						if (Discontinuity == FALSE && lPrevSampleTimes > 0)
-							lSampleDuration = lSampleTimeDevice - lPrevSampleTimes;
-
-						mPrevSampleTimes[lMediaStreamIndex] = lSampleTimeDevice;
-
-						LOG_INVOKE_MF_METHOD(SetSampleDuration, lReadySourceSample, lSampleDuration);
-
-						LOG_INVOKE_MF_METHOD(SetSampleTime, lReadySourceSample, lSampleTime);
-
-						lSampleTime += lSampleDuration;
-
-						mSampleTimes[lMediaStreamIndex] = lSampleTime;
-
-						mCurrentTime = lSampleTime;
-
-											
-
-
+						LOG_CHECK_PTR_MEMORY(lPushNewSampleRequest);
+													
 						LOG_INVOKE_MF_FUNCTION(MFPutWorkItem,
 							mSyncWorkerQueue,
 							this,
-							lPushNewSampleRequest);						
+							lPushNewSampleRequest);
+						
+						if (mPtrCustomisedMediaSession->getInitBarierCount() > 0 &&
+							mGUIDMajorType == MFMediaType_Video &&
+							mGUIDSubType == MFVideoFormat_H264)
+						{
+							lSourceStream->RequestSample(nullptr);
+						}
+
 					}
 					else if (leventType == MEStreamSeeked)
 					{
@@ -499,6 +515,210 @@ namespace CaptureManager
 
 				PropVariantClear(&leventVariant);
 
+				return lresult;
+			}
+
+
+			HRESULT CustomisedMediaPipelineProcessor::handleSourceStreamPushNewSampleRequest(
+				IMFAsyncResult* aPtrResult,
+				ICustomisedRequest* aPtrICustomisedRequest)
+			{
+				HRESULT lresult;
+				
+				do
+				{
+					LOG_CHECK_PTR_MEMORY(aPtrResult);
+
+					LOG_CHECK_PTR_MEMORY(aPtrICustomisedRequest);
+					
+					CComQIPtrCustom<IMFSample> lDownStreamSample = aPtrICustomisedRequest->getPtrUnkSender();
+
+					LOG_CHECK_PTR_MEMORY(lDownStreamSample);
+
+					CComQIPtrCustom<IMFTopologyNode> lDownStreamTopologyNode = aPtrICustomisedRequest->getPtrUnkSenderTopologyNode();
+
+					LOG_CHECK_PTR_MEMORY(lDownStreamTopologyNode);
+
+					DWORD lMediaStreamIndex = aPtrICustomisedRequest->getIndexOfStreamNode();
+					
+					CComPtrCustom<ICustomisedRequest> lPushNewSampleRequest = new (std::nothrow) CustomisedRequest(
+						ICustomisedRequest::PushNewSampleRequest,
+						lDownStreamSample,
+						lDownStreamTopologyNode);
+
+					LOG_CHECK_PTR_MEMORY(lPushNewSampleRequest);
+
+					auto lMediaStream = mMediaStreams[lMediaStreamIndex];
+					
+					lresult = mPtrCustomisedMediaSession->checkInitBarier(lMediaStream);
+										
+					if (mGUIDMajorType == MFMediaType_Video &&
+						mGUIDSubType == MFVideoFormat_H264)
+					{
+						CComPtrCustom<IMFMediaBuffer>  ppBuffer;
+
+						lDownStreamSample->GetBufferByIndex(0, &ppBuffer);
+
+						if (ppBuffer)
+						{
+							DWORD lCurrentLength;
+
+							DWORD lMaxLength;
+
+							BYTE* lptrData = nullptr;
+
+							ppBuffer->Lock(&lptrData, &lMaxLength, &lCurrentLength);
+
+							if (lptrData != nullptr && lCurrentLength > 0)
+							{
+								do
+								{
+									bool lstart_NALU = false;
+
+									bool lisSPS = false;
+
+									bool lisPPS = false;
+
+									int lstart_NALUPosition = 0;
+
+									int lstart_SPSPosition = 0;
+
+									int lstart_PPSPosition = 0;
+
+									int lend_HeadPosition = 0;
+
+									for (DWORD ldataIndex = 0; ldataIndex < lCurrentLength; ldataIndex++)
+									{
+										if (lstart_NALU)
+										{
+											if (lisSPS && lisPPS && lend_HeadPosition == 0)
+											{
+												lend_HeadPosition = lstart_NALUPosition;
+
+												int lstartHead = lstart_PPSPosition > lstart_SPSPosition ? lstart_SPSPosition : lstart_PPSPosition;
+
+												int llengthHead = lstart_NALUPosition - lstartHead;
+
+												if (SUCCEEDED(lresult))
+												{
+													lDownStreamSample->SetBlob(CM_HEADER, lptrData + lstartHead, llengthHead);
+												}
+											}
+
+											if (lptrData[ldataIndex] == 0x67)
+											{
+												lisSPS = true;
+
+												lstart_SPSPosition = lstart_NALUPosition;
+											}
+											else if (lptrData[ldataIndex] == 0x68)
+											{
+												lisPPS = true;
+
+												lstart_PPSPosition = lstart_NALUPosition;
+											}
+											else
+												break;
+										}
+
+										lstart_NALU = false;
+
+										if (lptrData[ldataIndex] == 0x1)
+										{
+											lstart_NALU = false;
+
+											int l_prevIndex = ldataIndex - 1;
+
+											if (l_prevIndex >= 0)
+											{
+												if (lptrData[l_prevIndex] == 0x0)
+												{
+													if (--l_prevIndex >= 0)
+													{
+														if (lptrData[l_prevIndex] == 0x0)
+														{
+															if (--l_prevIndex >= 0)
+															{
+																if (lptrData[l_prevIndex] == 0x0)
+																{
+																	lstart_NALU = true;
+
+																	lstart_NALUPosition = l_prevIndex;
+																}
+															}
+															else
+															{
+																lstart_NALU = true;
+
+																lstart_NALUPosition = l_prevIndex;
+															}
+														}
+													}
+												}
+											}
+										}
+										else
+											lstart_NALU = false;
+
+									}
+
+									LOG_INVOKE_MF_METHOD(SetUINT32,
+										lDownStreamSample,
+										MFSampleExtension_CleanPoint,
+										(lisSPS & lisPPS));
+
+								} while (false);
+							}
+
+							ppBuffer->Unlock();
+						}
+					}
+
+					auto lSampleTime = mSampleTimes[lMediaStreamIndex];
+
+					auto lPrevSampleTimes = mPrevSampleTimes[lMediaStreamIndex];
+
+					LONGLONG lSampleDuration;
+
+					LOG_INVOKE_MF_METHOD(GetSampleDuration, lDownStreamSample, &lSampleDuration);
+
+					LONGLONG lSampleTimeDevice;
+
+					LOG_INVOKE_MF_METHOD(GetSampleTime, lDownStreamSample, &lSampleTimeDevice);
+
+					UINT32 Discontinuity = FALSE;
+
+					do
+					{
+						LOG_INVOKE_MF_METHOD(GetUINT32,
+							lDownStreamSample,
+							MFSampleExtension_Discontinuity,
+							&Discontinuity);
+
+					} while (false);
+
+
+					if (mGUIDMajorType == MFMediaType_Video)
+						if (Discontinuity == FALSE && lPrevSampleTimes > 0)
+							lSampleDuration = lSampleTimeDevice - lPrevSampleTimes;
+
+					mPrevSampleTimes[lMediaStreamIndex] = lSampleTimeDevice;
+
+					LOG_INVOKE_MF_METHOD(SetSampleDuration, lDownStreamSample, lSampleDuration);
+
+					LOG_INVOKE_MF_METHOD(SetSampleTime, lDownStreamSample, lSampleTime);
+
+					lSampleTime += lSampleDuration;
+
+					mSampleTimes[lMediaStreamIndex] = lSampleTime;
+
+					LOG_INVOKE_MF_FUNCTION(MFPutWorkItem,
+						mSyncWorkerQueue,
+						this,
+						lPushNewSampleRequest);
+						
+				} while (false);
+				
 				return lresult;
 			}
 
@@ -767,7 +987,27 @@ namespace CaptureManager
 
 					if (aPtrSample != nullptr)
 					{
-						LOG_INVOKE_MF_METHOD(ProcessInput, lTransform, 0, aPtrSample, 0);
+						lresult = lTransform->ProcessInput(0, aPtrSample, 0);
+
+						if (lresult == 0xc00d36b2)
+						{
+
+							CComPtrCustom<ICustomisedRequest> lPullNewSampleRequest = new (std::nothrow) CustomisedRequest(
+								ICustomisedRequest::PullNewSampleRequest,
+								aPtrSample,
+								aPtrTopologyNode);
+
+							LOG_CHECK_PTR_MEMORY(lPullNewSampleRequest);
+
+							LOG_INVOKE_MF_FUNCTION(MFPutWorkItem,
+								mSyncWorkerQueue,
+								this,
+								lPullNewSampleRequest);
+
+							break;
+						}
+						else
+							LOG_CHECK_STATE_DESCR(FAILED(lresult), lresult);
 					}
 
 					CComPtrCustom<IMFTopologyNode> lDownStreamTopologyNode;
@@ -830,32 +1070,7 @@ namespace CaptureManager
 							0,
 							lOutputIndex,
 							&lOutputMediaType);
-
-						//using namespace pugi;
-
-						//xml_document lxmlDoc;
-
-						//auto ldeclNode = lxmlDoc.append_child(node_declaration);
-
-						//ldeclNode.append_attribute(L"version") = L"1.0";
-
-						//xml_node lcommentNode = lxmlDoc.append_child(node_comment);
-
-						//lcommentNode.set_value(L"XML Document of sources");
-
-						//auto lRootXMLElement = lxmlDoc.append_child(L"Sources");
-						//DataParser::readMediaType(
-						//	lOutputMediaType,
-						//	lRootXMLElement);
-
-						//std::wstringstream lwstringstream;
-
-						//lxmlDoc.print(lwstringstream);
-
-						//std::wstring lXMLDocumentString;
-
-						//lXMLDocumentString = lwstringstream.str();
-
+						
 						LOG_INVOKE_MF_METHOD(SetOutputType, lTransform, 0, lOutputMediaType, 0);
 
 						CComPtrCustom<IMFMediaType> lMediaType;
@@ -866,21 +1081,44 @@ namespace CaptureManager
 
 						if (mGUIDMajorType == MFMediaType_Video)
 						{
-							CComPtrCustom<ITopologyResolver> lVideoTopologyResolver(new (std::nothrow)CaptureManager::MediaSession::CustomisedMediaSession::VideoTopologyResolver());
+							auto lresetTargetNode = [&](
+								CComPtrCustom<IMFTopologyNode> aTopologyNode,
+								CComPtrCustom<IMFMediaType> aMediaType) {
 
-							LOG_CHECK_PTR_MEMORY(lVideoTopologyResolver);
+								HRESULT lresult(E_FAIL);
 
-							do
-							{
-								LOG_INVOKE_POINTER_METHOD(mPtrCustomisedMediaSession, resetTargetNode,
-									aPtrTopologyNode,
-									lMediaType,
-									lVideoTopologyResolver);
+								do
+								{
 
-							} while (false);
+									CComPtrCustom<ITopologyResolver> lVideoTopologyResolver(new (std::nothrow)CaptureManager::MediaSession::CustomisedMediaSession::VideoTopologyResolver());
 
+									LOG_CHECK_PTR_MEMORY(lVideoTopologyResolver);
 
+									do
+									{
+										LOG_INVOKE_POINTER_METHOD(mPtrCustomisedMediaSession, resetTargetNode,
+											aTopologyNode,
+											aMediaType,
+											lVideoTopologyResolver);
 
+										LOG_INVOKE_MF_METHOD(SetUINT32, aTopologyNode, CM_NEED_MORE_INPUT, FALSE);
+
+									} while (false);
+									
+								} while (false);
+							};
+
+							CComPtrCustom<IMFTopologyNode> lTopologyNode;
+
+							lTopologyNode = aPtrTopologyNode;
+							
+							LOG_INVOKE_MF_METHOD(SetUINT32, lTopologyNode, CM_NEED_MORE_INPUT, TRUE);
+
+							std::thread lPipeThread(lresetTargetNode,
+								lTopologyNode,
+								lMediaType);
+
+							lPipeThread.detach();
 
 							MFT_OUTPUT_DATA_BUFFER loutputDataBuffer;
 
@@ -918,28 +1156,31 @@ namespace CaptureManager
 									lresult = MF_E_TRANSFORM_NEED_MORE_INPUT;
 								}
 							}
-
 						}
 						else if (mGUIDMajorType == MFMediaType_Audio)
 						{
 
 						}
+
+						lresult = MF_E_TRANSFORM_NEED_MORE_INPUT;
 					}
 
+					UINT32 lisNEED_MORE_INPUT = FALSE;
 
+					auto lres = aPtrTopologyNode->GetUINT32(CM_NEED_MORE_INPUT, &lisNEED_MORE_INPUT);
+
+					if (SUCCEEDED(lres))
+					{
+						if(lisNEED_MORE_INPUT != FALSE)
+							lresult = MF_E_TRANSFORM_NEED_MORE_INPUT;
+					}
 
 					if (lresult == MF_E_TRANSFORM_TYPE_NOT_SET)
 					{
 					}
 					else	
 					if (lresult == MF_E_TRANSFORM_NEED_MORE_INPUT)
-					{
-						DWORD lOutputNodeCount;
-
-						LOG_INVOKE_MF_METHOD(GetOutputCount,
-							aPtrTopologyNode,
-							&lOutputNodeCount);
-							
+					{							
 						CComPtrCustom<IMFTopologyNode> lUpStreamTopologyNode;
 
 						DWORD lOutputIndex;
@@ -1012,6 +1253,9 @@ namespace CaptureManager
 										lSample->SetBlob(CM_HEADER, lPtrBlob, lBlobSize);
 									}
 
+									if(lPtrBlob != nullptr)
+										CoTaskMemFree(lPtrBlob);
+
 									GUID lSubType;
 
 									lresult = lOutputMediaType->GetGUID(MF_MT_SUBTYPE, &lSubType);
@@ -1053,9 +1297,7 @@ namespace CaptureManager
 #undef SWAPU16
 
 										lSample->SetBlob(CM_HEADER, extraData, sizeof(extraData));
-									}									
-
-									CoTaskMemFree(lPtrBlob);
+									}		
 								}
 								
 								lresult = aPtrTopologyNode->SetUINT32(CM_HEADER, FALSE);
@@ -1141,10 +1383,65 @@ namespace CaptureManager
 								lIndex,
 								&lDownStreamTopologyNode,
 								&lOutputIndex);
+
+							CComPtrCustom<IMFSample> lDownStreamSample;
+
+							lDownStreamSample = aPtrSample;
+							
+							if (lIndexOfRegisteredOutputNode > 0)
+							{
+								lDownStreamSample.Release();
+
+								LOG_INVOKE_MF_FUNCTION(MFCreateSample, &lDownStreamSample);
+
+								aPtrSample->CopyAllItems(lDownStreamSample);
+
+								CComPtrCustom<IMFMediaBuffer> lMediaBuffer;
+								
+								aPtrSample->GetBufferByIndex(0, &lMediaBuffer);
+
+								if (lMediaBuffer)
+								{
+									lDownStreamSample->AddBuffer(lMediaBuffer);
+									
+									LONGLONG lSampleDuration;
+
+									aPtrSample->GetSampleDuration(&lSampleDuration);
+
+									LONGLONG lSampleTimeDevice;
+
+									aPtrSample->GetSampleTime(&lSampleTimeDevice);
+
+									DWORD lTotalLength;
+
+									aPtrSample->GetTotalLength(&lTotalLength);
+
+
+									lDownStreamSample->SetSampleDuration(lSampleDuration);
+									
+									lDownStreamSample->SetSampleTime(lSampleTimeDevice);
+
+
+									UINT32 lBlobSize = 0;
+
+									UINT8 * lPtrBlob = nullptr;
+
+									lresult = aPtrSample->GetAllocatedBlob(CM_HEADER, &lPtrBlob, &lBlobSize);
+
+									if (SUCCEEDED(lresult))
+									{
+										lDownStreamSample->SetBlob(CM_HEADER, lPtrBlob, lBlobSize);
+									}
+
+									if (lPtrBlob != nullptr)
+										CoTaskMemFree(lPtrBlob);
+
+								}
+							}
 							
 							CComPtrCustom<ICustomisedRequest> lPushNewSampleRequest = new (std::nothrow) CustomisedRequest(
 								ICustomisedRequest::PushNewSampleRequest,
-								aPtrSample,
+								lDownStreamSample,
 								lDownStreamTopologyNode);
 
 							LOG_CHECK_PTR_MEMORY(lPushNewSampleRequest);
@@ -1258,24 +1555,7 @@ namespace CaptureManager
 					}
 
 					aPtrSample->SetSampleFlags(lflag);
-
-
-					//LONGLONG lSampleDuration;
-
-					//LOG_INVOKE_MF_METHOD(GetSampleDuration, aPtrSample, &lSampleDuration);
-
-					//LONGLONG lSampleTimeDevice;
-
-					//LOG_INVOKE_MF_METHOD(GetSampleTime, aPtrSample, &lSampleTimeDevice);
-
-					//LogPrintOut::getInstance().printOutln(
-					//	LogPrintOut::ERROR_LEVEL,
-					//	L"PipeLine - ",
-					//	L"lSampleDuration: ",
-					//	lSampleDuration,
-					//	L" lSampleTimeDevice: ",
-					//	lSampleTimeDevice);
-										
+															
 					if (m_processSampleAccess)
 						LOG_INVOKE_MF_METHOD(ProcessSample, lStreamSink, aPtrSample);
 					
@@ -1343,7 +1623,20 @@ namespace CaptureManager
 						LOG_INVOKE_MF_METHOD(GetMajorType,
 							lMediaTypeHandler,
 							&mGUIDMajorType);
-						
+
+						CComPtrCustom<IMFMediaType> lMediaType;
+
+						LOG_INVOKE_MF_METHOD(GetCurrentMediaType,
+							lMediaTypeHandler,
+							&lMediaType);
+
+						LOG_CHECK_PTR_MEMORY(lMediaType);
+
+						LOG_INVOKE_MF_METHOD(GetGUID,
+							lMediaType,
+							MF_MT_SUBTYPE, 
+							&mGUIDSubType);
+																
 						CComPtrCustom<IUnknown> lMediaSourceUnknown;
 
 						LOG_INVOKE_MF_METHOD(GetUnknown,
@@ -1665,10 +1958,7 @@ namespace CaptureManager
 					LOG_CHECK_PTR_MEMORY(aPtrTopology);
 
 					LOG_CHECK_PTR_MEMORY(aPtrPresentationClock);
-
-					LOG_INVOKE_FUNCTION(MediaFoundation::MediaFoundationManager::GetLockWorkQueue,
-						&mSyncWorkerQueue);
-
+					
 					CComQIPtrCustom<IPresentationClock> l_PresentationClock;
 					
 					l_PresentationClock = aPtrPresentationClock;

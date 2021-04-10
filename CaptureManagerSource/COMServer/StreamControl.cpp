@@ -123,6 +123,7 @@ namespace CaptureManager
 					lTypeOutputNode.append_attribute(L"IsPortCountConstant") = linfo.mIsOutputPortCountConstant;
 
 				}
+				
 
 				// SampleAccumulator node factory
 

@@ -17,6 +17,7 @@ namespace CaptureManager
 				{
 					SourceRequest = 0,
 					SourceStreamRequest,
+					SourceStreamPushNewSampleRequest,
 					StreamSinkRequest,
 					PullNewSampleRequest,
 					PushNewSampleRequest

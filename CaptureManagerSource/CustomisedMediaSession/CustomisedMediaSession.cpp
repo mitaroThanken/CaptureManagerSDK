@@ -132,25 +132,7 @@ namespace CaptureManager
 			CustomisedMediaSession::~CustomisedMediaSession()
 			{
 				HRESULT lresult;
-
-				for (auto& lIten : mListOfMediaPipelineProcessors)
-				{
-					auto lrefcount = lIten->AddRef();
-
-					while (lrefcount > 2)
-					{
-						lIten->Release();
-
-						Sleep(100);
-
-						lrefcount = lIten->AddRef();
-					}
-
-					lIten->Release();
-				}
-
-				Sleep(100);
-
+				
 				if (mEventQueue)
 				{
 					do
@@ -1129,9 +1111,9 @@ namespace CaptureManager
 
 				do
 				{
-					std::lock_guard<std::mutex> lLock(mInitBarierMutex);
+					std::unique_lock<std::mutex> lLock(mInitBarrierMutex);
 										
-					if (mInitBarierCount > 0)
+					if (mInitBarrierCount > 0)
 					{
 						auto lfineIter = std::find(mMediaStreamList.begin(),
 							mMediaStreamList.end(),
@@ -1139,18 +1121,23 @@ namespace CaptureManager
 
 						if (lfineIter == mMediaStreamList.end())
 						{
-							--mInitBarierCount;
+							--mInitBarrierCount;
 
 							mMediaStreamList.push_back(aPtrMediaStream);
 						}
 
-						lresult = E_NOTFOUND;
+						if (mInitBarrierCount == 0)
+							mInitBarrierCV.notify_all();
+						else
+							mInitBarrierCV.wait(lLock, [this] { return mInitBarrierCount <= 0; });
+
+						lresult = S_OK;
 					}
-					else if (mInitBarierCount == 0)
+					else if (mInitBarrierCount == 0)
 					{
 						lresult = S_OK;
 					}
-					else if (mInitBarierCount < 0)
+					else if (mInitBarrierCount < 0)
 					{
 						lresult = E_NOTFOUND;
 					}
@@ -1241,6 +1228,12 @@ namespace CaptureManager
 				} while (false);
 
 				return lresult;
+			}
+
+
+			LONG CustomisedMediaSession::getInitBarierCount()
+			{
+				return mInitBarrierCount;
 			}
 
 			HRESULT CustomisedMediaSession::notifyToBeginStreaming(
@@ -1524,7 +1517,7 @@ namespace CaptureManager
 								aConstPtrVarStartPosition);							
 						}
 						
-						mInitBarierCount = mMediaStreamList.size();
+						mInitBarrierCount = mMediaStreamList.size();
 
 						mMediaStreamList.clear();
 
@@ -1716,7 +1709,7 @@ namespace CaptureManager
 
 					mMediaSessionSate = MediaSessionSate::SessionStopped;
 
-					mInitBarierCount = -1;
+					mInitBarrierCount = -1;
 
 					for (auto& lItem : mListOfMediaPipelineProcessors)
 					{
@@ -1997,7 +1990,7 @@ namespace CaptureManager
 
 					LOG_INVOKE_MF_METHOD(GetElementCount, lSourceNodeCollection, &lSourceNodeCount);
 					
-					mInitBarierCount = lSourceNodeCount;
+					mInitBarrierCount = lSourceNodeCount;
 
 					std::list<TOPOID> lListOfUsedSources;
 
@@ -2403,6 +2396,11 @@ namespace CaptureManager
 					LOG_INVOKE_MF_METHOD(AddNode,
 						aPtrTopology,
 						aPtrTopologyNode);
+
+					LOG_INVOKE_MF_METHOD(SetUINT32,
+						aPtrTopologyNode,
+						CM_TARGET_NODE,
+						TRUE);
 
 					DWORD lRefOutputNodeCount;
 

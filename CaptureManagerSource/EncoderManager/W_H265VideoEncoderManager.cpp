@@ -92,10 +92,27 @@ namespace CaptureManager
 					CComPtrCustom<IMFMediaType> lMediaType;
 
 					LOG_INVOKE_MF_FUNCTION(MFCreateMediaType, &lMediaType);
-					
-					LOG_INVOKE_FUNCTION(copyInputMediaType,
-						aPtrUncompressedMediaType,
-						lMediaType);
+
+					do
+					{
+						LOG_INVOKE_FUNCTION(copyInputMediaType,
+							aPtrUncompressedMediaType,
+							lMediaType);
+
+					} while (false);
+
+					if (FAILED(lresult))
+					{
+						lMediaType.Release();
+
+						LOG_INVOKE_MF_FUNCTION(MFCreateMediaType, &lMediaType);
+
+						aPtrUncompressedMediaType->CopyAllItems(lMediaType);
+
+						LOG_INVOKE_FUNCTION(modifySubTypeOFMediaType,
+							&lMediaType,
+							MFVideoFormat_NV12);
+					}
 					
 					LOG_INVOKE_FUNCTION(checkAndFixInputMediatype,&lMediaType);
 					
@@ -325,9 +342,26 @@ namespace CaptureManager
 
 					LOG_INVOKE_MF_FUNCTION(MFCreateMediaType, &lMediaType);
 					
-					LOG_INVOKE_FUNCTION(copyInputMediaType,
-						aPtrUncompressedMediaType,
-						lMediaType);
+					do
+					{
+						LOG_INVOKE_FUNCTION(copyInputMediaType,
+							aPtrUncompressedMediaType,
+							lMediaType);
+
+					} while (false);
+
+					if (FAILED(lresult))
+					{
+						lMediaType.Release();
+
+						LOG_INVOKE_MF_FUNCTION(MFCreateMediaType, &lMediaType);
+
+						aPtrUncompressedMediaType->CopyAllItems(lMediaType);
+
+						LOG_INVOKE_FUNCTION(modifySubTypeOFMediaType,
+							&lMediaType,
+							MFVideoFormat_NV12);
+					}
 
 					LOG_INVOKE_FUNCTION(checkAndFixInputMediatype,&lMediaType);
 					

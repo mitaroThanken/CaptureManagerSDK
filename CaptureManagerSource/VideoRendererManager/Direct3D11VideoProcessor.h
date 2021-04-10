@@ -41,7 +41,7 @@ namespace CaptureManager
 
 						MFVideoNormalizedRect mDestVideoNormalizedRect;
 
-						DXVA2_Fixed32 mDXVA2_Fixed32;
+						FLOAT mAlpha;
 
 						StreamInfo()
 						{
@@ -59,13 +59,14 @@ namespace CaptureManager
 							mSrcVideoNormalizedRect.right = 1.0f;
 
 
-							mDXVA2_Fixed32 = DXVA2FloatToFixed(1.0f);
+							mAlpha = 1.0f;
 						}
 					};
 
 
 					std::unordered_map<DWORD, StreamInfo > m_InputStreams;
-
+					
+					CComPtrCustom<IMFTransform> mVideoSurfaceCopier;
 
 				public:
 					Direct3D11VideoProcessor();
@@ -284,7 +285,7 @@ namespace CaptureManager
 					UINT64 mAverageTimePerFrame;
 
 					bool mIsFlipEnabled;
-
+					
 					D3D11_VIDEO_PROCESSOR_COLOR_SPACE mColorSpace;
 
 					D3D11_VIDEO_COLOR mBackgroundColor;

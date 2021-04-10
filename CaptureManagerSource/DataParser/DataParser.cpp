@@ -75,6 +75,13 @@ namespace CaptureManager
 	EXTERN_GUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_AUDCAP_HW_SOURCE, 
 		0x5e574e59, 0xe28d, 0x41db, 0x93, 0x14, 0x08, 0x9b, 0xfe, 0xd6, 0x95, 0x7c);
 
+	///{F72A76A0-EB0A-11D0-ACE4-0000C0CC16BA}
+	EXTERN_GUID(VIDEOINFOHEADER2,
+		0xF72A76A0, 0xEB0A, 0x11D0, 0xAC, 0xE4, 0x00, 0x00, 0xC0, 0xCC, 0x16, 0xBA);
+
+
+
+
 	DEFINE_MEDIATYPE_GUID(MFVideoFormat_Y16, FCC('Y16 '));
 	DEFINE_MEDIATYPE_GUID(MFVideoFormat_NV21, FCC('NV21'));	
 	DEFINE_MEDIATYPE_GUID(MFVideoFormat_L16, D3DFMT_L16);
@@ -343,6 +350,14 @@ namespace CaptureManager
 
 
 		IF_EQUAL_RETURN(guid, MF_VIDEO_CAPTURE); //             PINNAME_VIDEO_CAPTURE 
+
+
+
+		IF_EQUAL_RETURN(guid, MFSampleExtension_CleanPoint);
+		IF_EQUAL_RETURN(guid, MFSampleExtension_Discontinuity);
+
+		// DirectShow Format type
+		IF_EQUAL_RETURN(guid, VIDEOINFOHEADER2);		
 
 		return nullptr;
 	}

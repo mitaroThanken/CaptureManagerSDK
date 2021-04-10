@@ -8,17 +8,24 @@ namespace CaptureManager
 {
 	namespace Core
 	{
-		class ConfigManager: public BaseConfigManager
+		class ConfigManager : public BaseConfigManager
 		{
 		public:
 
 			DWORD getMaxVideoRenderStreamCount(IUnknown* aPtrDevice = nullptr);
 			
 			DWORD getMaxAudioInputMixerNodeAmount();
-			
+
 		protected:
 			ConfigManager();
 			virtual ~ConfigManager();
+
+		private:
+
+			DWORD m_MaxVideoRenderStreamCount;
+			
+			DWORD getInnerMaxVideoRenderStreamCount();
+
 		};
 	}
 }

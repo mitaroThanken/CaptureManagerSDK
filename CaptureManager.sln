@@ -356,6 +356,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AudioRendererManager", "Cap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPFStreamingAudioRenderer", "Demo\CSDemo\WPFDemo\WPFStreamingAudioRenderer\WPFStreamingAudioRenderer.csproj", "{BD0CC19D-0D5E-4BBE-8E2D-735C98B5CC97}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StubTransform", "CaptureManagerSource\StubTransform\StubTransform.vcxproj", "{6CD218B2-252D-40EA-8CC6-F411E75316C2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1382,6 +1384,16 @@ Global
 		{BD0CC19D-0D5E-4BBE-8E2D-735C98B5CC97}.Release|x64.Build.0 = Release|Any CPU
 		{BD0CC19D-0D5E-4BBE-8E2D-735C98B5CC97}.Release|x86.ActiveCfg = Release|Any CPU
 		{BD0CC19D-0D5E-4BBE-8E2D-735C98B5CC97}.Release|x86.Build.0 = Release|Any CPU
+		{6CD218B2-252D-40EA-8CC6-F411E75316C2}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{6CD218B2-252D-40EA-8CC6-F411E75316C2}.Debug|x64.ActiveCfg = Debug|x64
+		{6CD218B2-252D-40EA-8CC6-F411E75316C2}.Debug|x64.Build.0 = Debug|x64
+		{6CD218B2-252D-40EA-8CC6-F411E75316C2}.Debug|x86.ActiveCfg = Debug|Win32
+		{6CD218B2-252D-40EA-8CC6-F411E75316C2}.Debug|x86.Build.0 = Debug|Win32
+		{6CD218B2-252D-40EA-8CC6-F411E75316C2}.Release|Any CPU.ActiveCfg = Release|Win32
+		{6CD218B2-252D-40EA-8CC6-F411E75316C2}.Release|x64.ActiveCfg = Release|x64
+		{6CD218B2-252D-40EA-8CC6-F411E75316C2}.Release|x64.Build.0 = Release|x64
+		{6CD218B2-252D-40EA-8CC6-F411E75316C2}.Release|x86.ActiveCfg = Release|Win32
+		{6CD218B2-252D-40EA-8CC6-F411E75316C2}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1488,6 +1500,7 @@ Global
 		{E897E5F8-5CD3-488E-8055-F6F1B08913AF} = {7A331BAF-9F66-4F8E-B78F-591DEE61A160}
 		{F1684EE7-82CA-4A26-AD86-CC0D02431940} = {2ED49416-883D-4D91-BC31-783C302E87F4}
 		{BD0CC19D-0D5E-4BBE-8E2D-735C98B5CC97} = {7A331BAF-9F66-4F8E-B78F-591DEE61A160}
+		{6CD218B2-252D-40EA-8CC6-F411E75316C2} = {2ED49416-883D-4D91-BC31-783C302E87F4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BCC07C26-9D62-4EB3-ABFB-A23BC78258F7}

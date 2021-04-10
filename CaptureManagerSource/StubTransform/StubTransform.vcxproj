@@ -1,17 +1,17 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|x64">
-      <Configuration>Debug</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{9DBA5AF0-2AC6-49B2-960A-75D89A25CA9C}</ProjectGuid>
+    <ProjectGuid>{6CD218B2-252D-40EA-8CC6-F411E75316C2}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>VideoRendererManager</RootNamespace>
+    <RootNamespace>StubTransform</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -74,10 +74,9 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>Win32;_DEBUG;_LIB;ENABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>Win32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(OutDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -90,10 +89,9 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>Win32;_DEBUG;_LIB;ENABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>Win32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(OutDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -105,13 +103,13 @@
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>Win32;NDEBUG;_LIB;ENABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>Win32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(OutDir)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -128,10 +126,10 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>Win32;NDEBUG;_LIB;ENABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>Win32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(OutDir)</AdditionalIncludeDirectories>
+      <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -144,37 +142,10 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BasePresenter.h" />
-    <ClInclude Include="Direct3D11and3D9Presenter.h" />
-    <ClInclude Include="Direct3D11Presenter.h" />
-    <ClInclude Include="Direct3D11VideoProcessor.h" />
-    <ClInclude Include="Direct3D9Presenter.h" />
-    <ClInclude Include="EVRActivate.h" />
-    <ClInclude Include="EVRMediaSink.h" />
-    <ClInclude Include="EVRMediaSinkFactory.h" />
-    <ClInclude Include="EVRStreamSink.h" />
-    <ClInclude Include="DXVAVideoProcessor.h" />
-    <ClInclude Include="IEVRStreamControl.h" />
-    <ClInclude Include="IMixerStreamPositionControl.h" />
-    <ClInclude Include="IPresenter.h" />
-    <ClInclude Include="IPresenterInit.h" />
-    <ClInclude Include="IRenderingControl.h" />
-    <ClInclude Include="IStreamFilterControl.h" />
-    <ClInclude Include="PresenterFactory.h" />
-    <ClInclude Include="VideoRendererFactory.h" />
+    <ClCompile Include="StubTransform.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BasePresenter.cpp" />
-    <ClCompile Include="Direct3D11and3D9Presenter.cpp" />
-    <ClCompile Include="Direct3D11Presenter.cpp" />
-    <ClCompile Include="Direct3D11VideoProcessor.cpp" />
-    <ClCompile Include="Direct3D9Presenter.cpp" />
-    <ClCompile Include="EVRMediaSink.cpp" />
-    <ClCompile Include="EVRMediaSinkFactory.cpp" />
-    <ClCompile Include="EVRStreamSink.cpp" />
-    <ClCompile Include="DXVAVideoProcessor.cpp" />
-    <ClCompile Include="PresenterFactory.cpp" />
-    <ClCompile Include="VideoRendererFactory.cpp" />
+    <ClInclude Include="StubTransform.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -119,7 +119,7 @@ namespace CaptureManager
 					IMFMediaType* aPtrUpStreamMediaType,
 					ITopologyResolver* aPtrTopologyResolver);
 
-
+				LONG getInitBarierCount();
 
 			protected:
 				
@@ -172,11 +172,13 @@ namespace CaptureManager
 
 				std::condition_variable mInitBarierCondition;
 
-				std::mutex mInitBarierMutex;
+				std::mutex mInitBarrierMutex;
 
 				std::mutex mFinishBarierMutex;
 
-				std::atomic<LONG> mInitBarierCount;
+				std::condition_variable mInitBarrierCV;
+
+				std::atomic<LONG> mInitBarrierCount;
 				
 				std::list<IMFMediaStream*> mMediaStreamList;
 

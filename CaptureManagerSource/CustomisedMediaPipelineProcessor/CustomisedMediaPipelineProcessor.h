@@ -112,6 +112,8 @@ namespace CaptureManager
 
 				GUID mGUIDMajorType;
 
+				GUID mGUIDSubType;
+
 				State mCurrentState;
 				
 				bool mIsDiscontinuity;
@@ -147,6 +149,10 @@ namespace CaptureManager
 					IMFAsyncResult* aPtrResult,
 					ICustomisedRequest* aPtrICustomisedRequest);
 
+				HRESULT handleSourceStreamPushNewSampleRequest(
+					IMFAsyncResult* aPtrResult,
+					ICustomisedRequest* aPtrICustomisedRequest);				
+
 				HRESULT handleStreamSinkRequest(
 					IMFAsyncResult* aPtrResult,
 					ICustomisedRequest* aPtrICustomisedRequest);
@@ -180,8 +186,6 @@ namespace CaptureManager
 					MFT_OUTPUT_DATA_BUFFER& aRefOutputBuffer);
 
 				HRESULT findAndRegisterSwitcherNode(const TOPOID& aRefSwitcherNodeID, IMFTopologyNode* aPtrTopologyNode);
-
-				MFTIME mCurrentTime;
 			};
 		}
 	}

@@ -3031,27 +3031,101 @@ if (lFunc != nullptr)Function = lFunc;\
 					CoTaskMemFree(lptrName);
 				}
 
+				struct MediaTypeItem
+				{
+					CComPtrCustom<IMFMediaType> m_MediaType;
+
+					DWORD m_Index;
+				};
+
 				
 				DWORD lTypeCount = 0;
 
 				LOG_INVOKE_MF_FUNCTION(GetMediaTypeCount, lHandler, &lTypeCount);
+
+				std::vector<MediaTypeItem> lMediaTypes;
+
+				for (DWORD lTypeIndex = 0; lTypeIndex < lTypeCount; lTypeIndex++)
+				{
+					CComPtrCustom<IMFMediaType> lMediaType;
+
+					LOG_INVOKE_MF_FUNCTION(GetMediaTypeByIndex, lHandler, lTypeIndex, &lMediaType);
+
+					if (lMediaType != nullptr)
+					{
+						BOOL l_skipFlag = FALSE;
+
+						for (size_t i = 0; i < lMediaTypes.size(); i++)
+						{
+							if (lMediaTypes[i].m_MediaType != nullptr)
+							{
+
+								UINT32 lBaseItemsCount;
+
+								lMediaTypes[i].m_MediaType->GetCount(&lBaseItemsCount);
+
+								UINT32 lCurrentItemsCount;
+
+								lMediaType->GetCount(&lCurrentItemsCount);
+
+								UINT32 lmin = lBaseItemsCount;
+
+								if (lmin > lCurrentItemsCount)
+									lmin = lCurrentItemsCount;
+
+								l_skipFlag = TRUE;
+								
+								for (size_t i1 = 0; i1 < lmin; i1++)
+								{
+									GUID lguid = { 0 };
+
+									PROPVARIANT lvar;
+									PropVariantInit(&lvar);
+
+									lMediaTypes[i].m_MediaType->GetItemByIndex(i1,
+										&lguid,
+										&lvar);
+
+									if (lguid == MF_MT_AM_FORMAT_TYPE)
+										continue;
+									
+									lMediaType->CompareItem(lguid, lvar, &l_skipFlag);
+
+									PropVariantClear(&lvar);
+									
+									if (l_skipFlag == FALSE)
+										break;
+								}							
+							}
+							
+							if (l_skipFlag != FALSE)
+								break;
+						}
+
+						if (l_skipFlag != FALSE)
+							continue;
+
+						MediaTypeItem l_MediaTypeItem;
+
+						l_MediaTypeItem.m_MediaType = lMediaType;
+
+						l_MediaTypeItem.m_Index = lTypeIndex;
+
+						lMediaTypes.push_back(l_MediaTypeItem);
+					}
+				}
 				
 				auto lMediaTypesNode = aRefStreamDescriptorNode.append_child(L"MediaTypes");
 
-				lMediaTypesNode.append_attribute(L"TypeCount") = (unsigned long long)lTypeCount;
+				DWORD lTypeIndex = 0;
 				
-				for (DWORD lTypeIndex = 0; lTypeIndex < lTypeCount; lTypeIndex++)
+				for (auto& lMediaType: lMediaTypes)
 				{
-
 					auto lMediaTypeNode = lMediaTypesNode.append_child(L"MediaType");
-
-					CComPtrCustom<IMFMediaType> lType;
-
-					LOG_INVOKE_MF_FUNCTION(GetMediaTypeByIndex, lHandler, lTypeIndex, &lType);
 					
-					lMediaTypeNode.append_attribute(L"Index") = (unsigned long long)lTypeIndex;
-					
-					lresult = DataParser::readMediaType(lType, lMediaTypeNode);
+					lresult = DataParser::readMediaType(lMediaType.m_MediaType, lMediaTypeNode);
+
+					lMediaTypeNode.append_attribute(L"Index") = (unsigned long long)lMediaType.m_Index;
 
 					if (FAILED(lresult))
 					{
@@ -3062,7 +3136,10 @@ if (lFunc != nullptr)Function = lFunc;\
 						continue;
 					}
 
+					lTypeIndex++;
 				}
+
+				lMediaTypesNode.append_attribute(L"TypeCount") = (unsigned long long)lTypeIndex;
 
 			} while (false);
 
@@ -5394,6 +5471,47 @@ if (lFunc != nullptr)Function = lFunc;\
 
 		  lresult = aPtrSample->ConvertToContiguousBuffer(aPtrPtrBuffer);
 		  
+	  } while (false);
+
+	  if (FAILED(lresult))
+	  {
+		  LogPrintOut::getInstance().printOutln(
+			  LogPrintOut::ERROR_LEVEL,
+			  __FUNCTIONW__,
+			  L" Error code: ",
+			  lresult);
+	  }
+
+	  return lresult;
+  }
+
+  HRESULT MediaFoundationManager::CopyToBuffer(
+	  IMFSample* aPtrSample,
+	  IMFMediaBuffer* aPtrBuffer)
+  {
+	  HRESULT lresult = E_FAIL;
+
+	  do
+	  {
+		  if (FAILED(mResult))
+			  break;
+
+		  if (aPtrSample == nullptr)
+		  {
+			  lresult = E_POINTER;
+
+			  break;
+		  }
+
+		  if (aPtrBuffer == nullptr)
+		  {
+			  lresult = E_POINTER;
+
+			  break;
+		  }
+
+		  lresult = aPtrSample->CopyToBuffer(aPtrBuffer);
+
 	  } while (false);
 
 	  if (FAILED(lresult))

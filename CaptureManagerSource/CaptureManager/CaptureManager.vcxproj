@@ -372,6 +372,9 @@ copy "$(TargetPath)" "$(SolutionDir)$(ProjectName)SDK-$(Version_Major).$(Version
     <ProjectReference Include="..\SessionProcessorManager\SessionProcessorManager.vcxproj">
       <Project>{a41fedca-7dbd-46e3-881d-4cfaa3d75653}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\StubTransform\StubTransform.vcxproj">
+      <Project>{6cd218b2-252d-40ea-8cc6-f411e75316c2}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Switcher\Switcher.vcxproj">
       <Project>{7e666555-b2dc-4e8c-9f7f-ec33dac6d416}</Project>
     </ProjectReference>

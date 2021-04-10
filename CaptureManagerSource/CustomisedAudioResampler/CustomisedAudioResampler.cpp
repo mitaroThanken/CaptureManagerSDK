@@ -420,7 +420,12 @@ namespace CaptureManager
 
 					LOG_CHECK_STATE(aOutputBufferCount != 1 || aFlags != 0);
 
-					LOG_CHECK_STATE_DESCR(!mSample, MF_E_TRANSFORM_NEED_MORE_INPUT);
+					if (!mSample)
+					{
+						lresult = MF_E_TRANSFORM_NEED_MORE_INPUT;
+
+						break;
+					}
 
 					if (mCustomizedResampler == FALSE)
 					{

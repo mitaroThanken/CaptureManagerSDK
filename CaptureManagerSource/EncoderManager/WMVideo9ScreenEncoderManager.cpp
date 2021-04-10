@@ -89,11 +89,28 @@ namespace CaptureManager
 					CComPtrCustom<IMFMediaType> lMediaType;
 
 					LOG_INVOKE_MF_FUNCTION(MFCreateMediaType, &lMediaType);
-					
-					LOG_INVOKE_FUNCTION(copyInputMediaType,
-						aPtrUncompressedMediaType,
-						lMediaType);
-					
+
+					do
+					{
+						LOG_INVOKE_FUNCTION(copyInputMediaType,
+							aPtrUncompressedMediaType,
+							lMediaType);
+
+					} while (false);
+
+					if (FAILED(lresult))
+					{
+						lMediaType.Release();
+
+						LOG_INVOKE_MF_FUNCTION(MFCreateMediaType, &lMediaType);
+
+						aPtrUncompressedMediaType->CopyAllItems(lMediaType);
+						
+						LOG_INVOKE_FUNCTION(modifySubTypeOFMediaType,
+							lMediaType,
+							MFVideoFormat_RGB24);
+					}
+										
 					CComPtrCustom<IMFTransform> lEncoder;
 
 					LOG_INVOKE_OBJECT_METHOD(lEncoder, CoCreateInstance,aRefEncoderCLSID);
@@ -182,9 +199,28 @@ namespace CaptureManager
 
 					LOG_INVOKE_MF_FUNCTION(MFCreateMediaType, &lMediaType);
 					
-					LOG_INVOKE_FUNCTION(copyInputMediaType,
-						aPtrUncompressedMediaType,
-						lMediaType);
+
+
+					do
+					{
+						LOG_INVOKE_FUNCTION(copyInputMediaType,
+							aPtrUncompressedMediaType,
+							lMediaType);
+
+					} while (false);
+
+					if (FAILED(lresult))
+					{
+						lMediaType.Release();
+
+						LOG_INVOKE_MF_FUNCTION(MFCreateMediaType, &lMediaType);
+
+						aPtrUncompressedMediaType->CopyAllItems(lMediaType);
+
+						LOG_INVOKE_FUNCTION(modifySubTypeOFMediaType,
+							lMediaType,
+							MFVideoFormat_RGB24);
+					}
 					
 					CComPtrCustom<IMFTransform> lEncoder;
 
@@ -268,10 +304,27 @@ namespace CaptureManager
 					CComPtrCustom<IMFMediaType> lMediaType;
 
 					LOG_INVOKE_MF_FUNCTION(MFCreateMediaType, &lMediaType);
-					
-					LOG_INVOKE_FUNCTION(copyInputMediaType,
-						aPtrUncompressedMediaType,
-						lMediaType);
+
+					do
+					{
+						LOG_INVOKE_FUNCTION(copyInputMediaType,
+							aPtrUncompressedMediaType,
+							lMediaType);
+
+					} while (false);
+
+					if (FAILED(lresult))
+					{
+						lMediaType.Release();
+
+						LOG_INVOKE_MF_FUNCTION(MFCreateMediaType, &lMediaType);
+
+						aPtrUncompressedMediaType->CopyAllItems(lMediaType);
+
+						LOG_INVOKE_FUNCTION(modifySubTypeOFMediaType,
+							lMediaType,
+							MFVideoFormat_RGB24);
+					}
 					
 					CComPtrCustom<IMFTransform> lEncoder;
 

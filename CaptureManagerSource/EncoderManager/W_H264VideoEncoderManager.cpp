@@ -31,6 +31,7 @@ SOFTWARE.
 #include "../Common/GUIDs.h"
 #include "EncoderManagerFactory.h"
 #include "../LogPrintOut/LogPrintOut.h"
+#include "../StubTransform/StubTransform.h"
 #include "propvarutil.h"
 #include <wmcodecdsp.h>
 #include <VersionHelpers.h>
@@ -88,6 +89,24 @@ namespace CaptureManager
 						E_NOTIMPL);
 					
 					LOG_CHECK_PTR_MEMORY(aPtrUncompressedMediaType);
+
+					GUID lSubType;
+
+					LOG_INVOKE_MF_METHOD(GetGUID,
+						aPtrUncompressedMediaType,
+						MF_MT_SUBTYPE,
+						&lSubType);
+
+					if (lSubType == getMediaSubType())
+					{
+						CComPtrCustom<IMFMediaType> lOutputMediaType;
+
+						lOutputMediaType = aPtrUncompressedMediaType;
+
+						aRefListOfMediaTypes.push_back(lOutputMediaType.detach());
+
+						break;
+					}
 										
 					CComPtrCustom<IMFMediaType> lMediaType;
 
@@ -309,9 +328,25 @@ namespace CaptureManager
 			{
 				HRESULT lresult;
 
+				CComPtrCustom<IMFTransform> lEncoder;
+
 				do
 				{
 					LOG_CHECK_PTR_MEMORY(aPtrUncompressedMediaType);
+					
+					GUID lSubType;
+
+					LOG_INVOKE_MF_METHOD(GetGUID,
+						aPtrUncompressedMediaType,
+						MF_MT_SUBTYPE,
+						&lSubType);
+
+					if (lSubType == getMediaSubType())
+					{
+						MediaSession::CustomisedMediaSession::StubTransform::create(aPtrUncompressedMediaType, &lEncoder);
+
+						break;
+					}
 					
 					LOG_CHECK_PTR_MEMORY(aPtrPtrEncoderTransform);
 					
@@ -335,8 +370,6 @@ namespace CaptureManager
 						lMediaType);
 
 					LOG_INVOKE_FUNCTION(checkAndFixInputMediatype,&lMediaType);
-					
-					CComPtrCustom<IMFTransform> lEncoder;
 
 					LOG_INVOKE_OBJECT_METHOD(lEncoder, CoCreateInstance, aRefEncoderCLSID);
 
@@ -386,11 +419,10 @@ namespace CaptureManager
 						0,
 						lMediaType,
 						0);
-					
-					
-					*aPtrPtrEncoderTransform = lEncoder.Detach();
 
 				} while (false);
+				
+				*aPtrPtrEncoderTransform = lEncoder.Detach();
 
 				return lresult;
 			}

@@ -1231,6 +1231,10 @@ namespace CaptureManager
 					IMFSample* aPtrSample,
 					IMFMediaBuffer** aPtrPtrBuffer);
 
+				static HRESULT CopyToBuffer(
+					IMFSample* aPtrSample,
+					IMFMediaBuffer* aPtrBuffer);
+
 				static HRESULT GetTotalLength(
 					IMFSample* aPtrSample,
 					DWORD* aPtrTotalLength);
