@@ -47,7 +47,7 @@ namespace CaptureManager
 			using namespace pugi;
 
 			HRESULT lresult;
-						
+
 			do
 			{
 				CComPtrCustom<IMFAttributes> lAttributes;
@@ -55,15 +55,15 @@ namespace CaptureManager
 				CComMassivPtr<IMFActivate> lCaptureDeviceActivates;
 
 				LOG_INVOKE_MF_FUNCTION(MFCreateAttributes,
-					&lAttributes, 
+					&lAttributes,
 					1);
 
 				LOG_INVOKE_MF_METHOD(SetGUID,
 					lAttributes,
 					MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,
 					MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
-				
-				LOG_INVOKE_FUNCTION(enumSources,lAttributes,
+
+				LOG_INVOKE_FUNCTION(enumSources, lAttributes,
 					aRefRoolXML_Node);
 
 				LOG_INVOKE_MF_METHOD(SetGUID,
@@ -80,7 +80,7 @@ namespace CaptureManager
 		}
 
 		HRESULT CaptureDeviceManager::getSource(
-			std::wstring& aRefSymbolicLink, 
+			std::wstring& aRefSymbolicLink,
 			IMFMediaSource** aPtrPtrMediaSource)
 		{
 			HRESULT lresult;
@@ -92,25 +92,25 @@ namespace CaptureManager
 				CComPtrCustom<IMFAttributes> lSymbolicLinkAttributes;
 
 				LOG_INVOKE_MF_FUNCTION(MFCreateAttributes,
-					&lSymbolicLinkAttributes, 
+					&lSymbolicLinkAttributes,
 					2);
 
 				LOG_INVOKE_MF_METHOD(SetGUID,
 					lSymbolicLinkAttributes,
 					MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,
 					MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
-				
+
 				LOG_INVOKE_MF_METHOD(SetString,
 					lSymbolicLinkAttributes,
 					MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_SYMBOLIC_LINK,
 					aRefSymbolicLink.c_str());
-				
+
 				CComPtrCustom<IMFActivate> lVideoSourceActivate;
 
 				LOG_INVOKE_MF_FUNCTION(MFCreateDeviceSourceActivate,
 					lSymbolicLinkAttributes,
 					&lVideoSourceActivate);
-				
+
 				LOG_INVOKE_FUNCTION(MediaFoundation::MediaFoundationManager::GetSource,
 					lVideoSourceActivate,
 					aPtrPtrMediaSource);
@@ -147,7 +147,7 @@ namespace CaptureManager
 					CComMassivPtr<IMFActivate> lCaptureDeviceActivates;
 
 					LOG_INVOKE_MF_FUNCTION(MFEnumDeviceSources,
-						lSymbolicLinkAttributes,
+					lSymbolicLinkAttributes,
 						lCaptureDeviceActivates.getPtrMassivPtr(),
 						lCaptureDeviceActivates.getPtrSizeMassiv());
 
@@ -241,7 +241,7 @@ namespace CaptureManager
 			} while (false);
 
 			return lresult;
-		}	
+		}
 
 		HRESULT CaptureDeviceManager::enumSources(
 			IMFAttributes* aAttributes,
@@ -254,10 +254,10 @@ namespace CaptureManager
 			do
 			{
 				LOG_CHECK_PTR_MEMORY(aAttributes);
-				
+
 				CComMassivPtr<IMFActivate> lCaptureDeviceActivates;
-				
-				LOG_INVOKE_MF_FUNCTION(MFEnumDeviceSources, 
+
+				LOG_INVOKE_MF_FUNCTION(MFEnumDeviceSources,
 					aAttributes,
 					lCaptureDeviceActivates.getPtrMassivPtr(),
 					lCaptureDeviceActivates.getPtrSizeMassiv());
@@ -267,56 +267,68 @@ namespace CaptureManager
 				{
 					auto lSource = aRefRoolXML_Node.append_child(L"Source");
 
-					CComPtrCustom<IMFMediaSource> lMediaSource;
-					
-					GUID lVIDCAP_CATEGORY = GUID_NULL;
-					
-					CComPtrCustom<IMFActivate> lMediaType;
-
-					lMediaType = lCaptureDeviceActivates[lsourceIndex];
-
-					if (!lMediaType)
+					do
 					{
-						lresult = E_INVALIDARG;
 
-						break;
-					}
+						CComPtrCustom<IMFMediaSource> lMediaSource;
 
-					lresult = lMediaType->GetGUID(
-						MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_CATEGORY,
-						&lVIDCAP_CATEGORY);
+						GUID lVIDCAP_CATEGORY = GUID_NULL;
 
-					if (SUCCEEDED(lresult))
-					{
-						using namespace Core;
+						CComPtrCustom<IMFActivate> lMediaType;
 
-						//if(!Singleton<ConfigManager>::getInstance().isWindows10())
+						lMediaType = lCaptureDeviceActivates[lsourceIndex];
+
+						if (!lMediaType)
 						{
-							if (lVIDCAP_CATEGORY == CLSID_VideoInputDeviceCategory)
-							{
-								aRefRoolXML_Node.remove_child(lSource);
+							lresult = E_INVALIDARG;
 
-								continue;
+							break;
+						}
+
+						lresult = lMediaType->GetGUID(
+							MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_CATEGORY,
+							&lVIDCAP_CATEGORY);
+
+						if (SUCCEEDED(lresult))
+						{
+							using namespace Core;
+
+							//if(!Singleton<ConfigManager>::getInstance().isWindows10())
+							{
+								if (lVIDCAP_CATEGORY == CLSID_VideoInputDeviceCategory)
+								{
+									lresult = E_INVALIDARG;
+
+									break;
+								}
 							}
 						}
+
+						DataParser::readSourceActivate(
+							lCaptureDeviceActivates[lsourceIndex],
+							lSource.append_child(L"Source.Attributes"));
+
+						addDeviceInstanceLink(lSource);
+
+						LOG_INVOKE_FUNCTION(MediaFoundation::MediaFoundationManager::GetSource,
+							lCaptureDeviceActivates[lsourceIndex],
+							&lMediaSource);
+
+						LOG_INVOKE_FUNCTION(parse, lMediaSource,
+							lSource);
+
+						if (lMediaSource)
+							LOG_INVOKE_MF_METHOD(Shutdown,
+								lMediaSource);
+
+					} while (false);
+
+					if (FAILED(lresult))
+					{
+						aRefRoolXML_Node.remove_child(lSource);
+
+						lresult = S_OK;
 					}
-					
-					DataParser::readSourceActivate(
-						lCaptureDeviceActivates[lsourceIndex],
-						lSource.append_child(L"Source.Attributes"));
-
-					addDeviceInstanceLink(lSource);
-					
-					LOG_INVOKE_FUNCTION(MediaFoundation::MediaFoundationManager::GetSource,
-						lCaptureDeviceActivates[lsourceIndex],
-						&lMediaSource);
-
-					LOG_INVOKE_FUNCTION(parse,lMediaSource,
-						lSource);
-															
-					if (lMediaSource)
-						LOG_INVOKE_MF_METHOD(Shutdown, 
-						lMediaSource);
 				}
 
 			} while (false);
@@ -337,7 +349,7 @@ namespace CaptureManager
 			{
 
 				auto lSymbolicLinkNode = aRefSourceNode.select_node(L"Source.Attributes/Attribute[@Name='MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_SYMBOLIC_LINK']/SingleValue/@Value");
-				
+
 				lresult = getDeviceInstanceLink(lSymbolicLinkNode, ldeviceInstanceLink);
 
 				if (SUCCEEDED(lresult))
@@ -347,7 +359,7 @@ namespace CaptureManager
 
 
 				lSymbolicLinkNode = aRefSourceNode.select_node(L"Source.Attributes/Attribute[@Name='MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_AUDCAP_SYMBOLIC_LINK']/SingleValue/@Value");
-				
+
 				lresult = getAudioHaradwareLink(lSymbolicLinkNode, ldeviceInstanceLink);
 
 				if (SUCCEEDED(lresult))
@@ -364,11 +376,11 @@ namespace CaptureManager
 				if (!lAttributesNode.node().empty())
 				{
 					auto lAttributeNode = lAttributesNode.node().append_child(L"Attribute");
-					
+
 					lAttributeNode.append_attribute(L"Name").set_value(L"CM_DEVICE_LINK");
 
 					WCHAR *lptrName = nullptr;
-					
+
 					lresult = StringFromCLSID(CM_DEVICE_LINK, &lptrName);
 
 					if (SUCCEEDED(lresult))
@@ -460,7 +472,7 @@ namespace CaptureManager
 						if (lfind != std::wstring::npos)
 						{
 							aRefDeviceInstanceLink = L"capturemanager///software///sources";
-						}						
+						}
 					}
 				}
 
@@ -468,7 +480,7 @@ namespace CaptureManager
 
 			return lresult;
 		}
-				
+
 		HRESULT CaptureDeviceManager::getAudioHaradwareLink(
 			pugi::xpath_node& aRefAttributeNode,
 			std::wstring& aRefDeviceInstanceLink)
@@ -534,7 +546,7 @@ namespace CaptureManager
 								auto lfind = lsymbolicLink.find(lSymbolicLink);
 
 								if (lfind != std::wstring::npos)
-								{									
+								{
 									CComPtrCustom<IPropertyStore> lPropertyStore;
 
 									LOG_INVOKE_POINTER_METHOD(lMMDevice, OpenPropertyStore, STGM_READ, &lPropertyStore);
@@ -567,7 +579,7 @@ namespace CaptureManager
 											}
 
 											LOG_INVOKE_FUNCTION(PropVariantClear, &pv);
-										}										
+										}
 									}
 								}
 							}
@@ -577,13 +589,13 @@ namespace CaptureManager
 					lresult = S_OK;
 
 					std::transform(lsymbolicLink.begin(), lsymbolicLink.end(), lsymbolicLink.begin(), ::tolower);
-					
+
 					aRefDeviceInstanceLink = lsymbolicLink;
 
 					//_Ptr = 0x0810b150 "\\?\usb#vid_0c45&pid_6a04&mi_00#7&2b6a047&0&0000#{e5323777-f976-4f5b-9b55-b94699c46e44}\global"
-					
+
 					auto lfind = lsymbolicLink.find(L"usb");
-					
+
 					if (lfind != std::wstring::npos)
 					{
 						aRefDeviceInstanceLink = L"\\\\?\\usb#";

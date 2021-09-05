@@ -60,11 +60,11 @@ namespace CaptureManager
 						{
 							std::lock_guard<std::mutex> llock(mMutex);
 
-							*aPtrSampleSize = mImageByteSize;
+							*aPtrSampleSize = mCurrentImageByteSize;
 
 							copy(mData.get(), 
 								aPtrData, 
-								mImageByteSize,
+								mCurrentImageByteSize,
 								false);
 
 							lresult = S_OK;
@@ -87,7 +87,7 @@ namespace CaptureManager
 				{
 					Core::MemoryManager::memcpy(aPtrDestination, aPtrSource, aSampleSize);
 
-					mImageByteSize = aSampleSize;
+					mCurrentImageByteSize = aSampleSize;
 
 					mReadyToRead = aState;
 				}

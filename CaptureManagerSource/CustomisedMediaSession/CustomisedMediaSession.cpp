@@ -1494,11 +1494,17 @@ namespace CaptureManager
 
 						if (FAILED(lresult))
 						{
+							auto ltempResult = lresult;
+
 							for (auto& litem : mListOfMediaPipelineProcessors)
 							{
-								LOG_INVOKE_POINTER_METHOD(litem, stopSources);
-
+								do
+								{
+									LOG_INVOKE_POINTER_METHOD(litem, stopSources);
+								} while (false);
 							}
+
+							lresult = ltempResult;
 
 							break;
 						}
@@ -1523,11 +1529,17 @@ namespace CaptureManager
 
 						if (FAILED(lresult))
 						{
+							auto ltempResult = lresult;
+
 							for (auto& litem : mListOfMediaPipelineProcessors)
 							{
-								LOG_INVOKE_POINTER_METHOD(litem, stopSources);
-
+								do
+								{
+									LOG_INVOKE_POINTER_METHOD(litem, stopSources);
+								} while (false);
 							}
+
+							lresult = ltempResult;
 
 							break;
 						}

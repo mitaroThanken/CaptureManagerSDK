@@ -8,6 +8,7 @@
 #define _DEBUG_CAPTUREMANAGER
 #endif
 
+#define ENABLE
 
 #define RGB2BGR(a_ulColor) (a_ulColor & 0xFF000000) | ((a_ulColor & 0xFF0000) >> 16) | (a_ulColor & 0x00FF00) | ((a_ulColor & 0x0000FF) << 16)
 

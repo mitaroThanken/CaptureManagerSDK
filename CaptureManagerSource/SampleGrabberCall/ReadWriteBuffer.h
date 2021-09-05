@@ -28,15 +28,17 @@ namespace CaptureManager
 					HRESULT init(DWORD aImageByteSize)
 					{
 						mImageByteSize = aImageByteSize;
+
+						mCurrentImageByteSize = mImageByteSize;
 						
-						mData.reset(new (std::nothrow) unsigned char[aImageByteSize]);
+						mData.reset(new (std::nothrow) unsigned char[mImageByteSize]);
 
 						if (!mData)
 						{
 							return E_OUTOFMEMORY;
 						}
 
-						memset(mData.get(), 0, aImageByteSize);
+						memset(mData.get(), 0, mImageByteSize);
 
 						return S_OK;
 					}
@@ -68,6 +70,8 @@ namespace CaptureManager
 					std::unique_ptr<unsigned char[]> mData;
 
 					DWORD mImageByteSize;
+
+					DWORD mCurrentImageByteSize;
 
 					bool mReadyToRead;
 

@@ -31,7 +31,6 @@ SOFTWARE.
 #include "../DirectXManager/Direct3D11Manager.h"
 #include "../DirectXManager/DXGIManager.h"
 #include "../ConfigManager/ConfigManager.h"
-#include "../VideoSurfaceCopierManager/VideoSurfaceCopierManager.h"
 #include "../Common/Singleton.h"
 #include "PixelShader.h"
 #include "VertexShader.h"
@@ -331,12 +330,15 @@ namespace CaptureManager
 					HRESULT lresult(E_FAIL);
 
 					do
-					{						
+					{
+
+						DXVA2_Fixed32 lDXVA2_Fixed32 = DXVA2FloatToFixed(aOpacity);
+
 						auto lIter = m_InputStreams.find(aInputStreamID);
 
 						LOG_CHECK_STATE_DESCR(lIter == m_InputStreams.end(), MF_E_INVALIDSTREAMNUMBER);
 
-						(*lIter).second.mAlpha = aOpacity;
+						(*lIter).second.mDXVA2_Fixed32 = lDXVA2_Fixed32;
 
 						lresult = S_OK;
 
@@ -474,16 +476,24 @@ namespace CaptureManager
 
 					do
 					{
+						DXVA2_Fixed32 lDXVA2_Fixed32 = { 0, 1 };
 
-						std::lock_guard<std::mutex> lock(mMutex);
+						do
+						{
 
-						auto lIter = m_InputStreams.find(aInputStreamID);
+							std::lock_guard<std::mutex> lock(mMutex);
 
-						LOG_CHECK_STATE_DESCR(lIter == m_InputStreams.end(), MF_E_INVALIDSTREAMNUMBER);
+							auto lIter = m_InputStreams.find(aInputStreamID);
 
-						*aPtrOpacity = (*lIter).second.mAlpha;
+							LOG_CHECK_STATE_DESCR(lIter == m_InputStreams.end(), MF_E_INVALIDSTREAMNUMBER);
 
-						lresult = S_OK;
+							lDXVA2_Fixed32 = (*lIter).second.mDXVA2_Fixed32;
+
+							lresult = S_OK;
+
+						} while (false);
+
+						*aPtrOpacity = DXVA2FixedToFloat(lDXVA2_Fixed32);
 
 					} while (false);
 
@@ -1088,9 +1098,7 @@ namespace CaptureManager
 					HRESULT lresult = E_NOTIMPL;
 					do
 					{
-						LOG_CHECK_PTR_MEMORY(mOutputMediaType);
 
-						LOG_INVOKE_QUERY_INTERFACE_METHOD(mOutputMediaType, aPtrPtrType);
 
 					} while (false);
 
@@ -1518,8 +1526,6 @@ namespace CaptureManager
 						}
 						else if (aMessage == MFT_MESSAGE_COMMAND_FLUSH)
 						{
-							if (mVideoSurfaceCopier)
-								mVideoSurfaceCopier->ProcessMessage(aMessage, aParam);
 						}
 						else if (aMessage == MFT_MESSAGE_COMMAND_DRAIN)
 						{
@@ -1552,6 +1558,7 @@ namespace CaptureManager
 					DWORD aFlags)
 				{
 					HRESULT lresult = S_OK;
+					DWORD dwBufferCount = 0;
 
 					do
 					{
@@ -1570,108 +1577,8 @@ namespace CaptureManager
 
 						LOG_CHECK_STATE_DESCR(!mOutputMediaType, MF_E_NOTACCEPTING);
 
-						do
-						{
-							CComPtrCustom<IMFMediaBuffer> lDestBuffer;
+						(*lIter).second.mSample = aPtrSample;
 
-							LOG_INVOKE_MF_METHOD(GetBufferByIndex, aPtrSample, 0, &lDestBuffer);
-
-							// Get the surface from the buffer.
-
-							CComPtrCustom<IMFDXGIBuffer> lIMFDXGIBuffer;
-
-							LOG_INVOKE_QUERY_INTERFACE_METHOD(lDestBuffer, &lIMFDXGIBuffer);
-
-							LOG_CHECK_PTR_MEMORY(lIMFDXGIBuffer);
-
-							CComPtrCustom<ID3D11Texture2D> lDestSurface;
-
-							LOG_INVOKE_DXGI_METHOD(GetResource, lIMFDXGIBuffer,
-								IID_PPV_ARGS(&lDestSurface));
-
-							if(lDestSurface)
-								(*lIter).second.mSample = aPtrSample;
-
-							return lresult;
-							
-						} while (false);
-
-						if (FAILED(lresult))
-						{
-							CComPtrCustom<IMFMediaBuffer> lBuffer;
-
-							aPtrSample->GetBufferByIndex(0, &lBuffer);
-
-							LOG_CHECK_PTR_MEMORY(lBuffer);
-													   
-							if (!mVideoSurfaceCopier)
-							{
-								CComPtrCustom<IMFVideoSampleAllocatorEx> lVideoSampleAllocatorEx;
-
-								LOG_INVOKE_MF_FUNCTION(MFCreateVideoSampleAllocatorEx,
-									IID_PPV_ARGS(&lVideoSampleAllocatorEx));
-
-								if (lVideoSampleAllocatorEx)
-								{
-									if (mDeviceManager)
-										lresult = lVideoSampleAllocatorEx->SetDirectXManager(mDeviceManager);
-								}
-
-								CComPtrCustom<IUnknown> lUnknown;
-
-
-
-								GUID lMFVideoFormat = GUID_NULL;
-
-								LOG_INVOKE_MF_METHOD(GetGUID,
-									(*lIter).second.mInputMediaType,
-									MF_MT_SUBTYPE,
-									&lMFVideoFormat);
-
-
-								CComPtrCustom<IMFMediaType> lCurrentMediaType;
-
-								LOG_INVOKE_MF_FUNCTION(MFCreateMediaType,
-									&lCurrentMediaType);
-
-								LOG_CHECK_PTR_MEMORY(lCurrentMediaType);
-
-								LOG_INVOKE_MF_METHOD(CopyAllItems,
-									(*lIter).second.mInputMediaType,
-									lCurrentMediaType);
-															   
-								LOG_INVOKE_FUNCTION(Singleton<Transform::VideoSurfaceCopierManager>::getInstance().createVideoSurfaceCopier,
-									lVideoSampleAllocatorEx,
-									lCurrentMediaType,
-									&lUnknown);
-
-								LOG_CHECK_PTR_MEMORY(lUnknown);
-
-								LOG_INVOKE_QUERY_INTERFACE_METHOD(lUnknown, &mVideoSurfaceCopier);
-
-								LOG_CHECK_PTR_MEMORY(mVideoSurfaceCopier);
-																
-								LOG_INVOKE_POINTER_METHOD(lVideoSampleAllocatorEx, InitializeSampleAllocator, m_InputStreams.size() * 3, lCurrentMediaType);
-							}
-
-							if (mVideoSurfaceCopier)
-							{
-								LOG_INVOKE_POINTER_METHOD(mVideoSurfaceCopier, ProcessInput, 0, aPtrSample, 0);
-
-								MFT_OUTPUT_DATA_BUFFER lOutputSamples{ 0 };
-
-								DWORD lstatus;
-
-								LOG_INVOKE_MF_METHOD(ProcessOutput, mVideoSurfaceCopier, 0, 1, &lOutputSamples, &lstatus);
-
-								if (lOutputSamples.pSample)
-								{
-									(*lIter).second.mSample = lOutputSamples.pSample;
-
-									lOutputSamples.pSample->Release();
-								}
-							}
-						}						
 					} while (false);
 
 					return lresult;
@@ -1919,7 +1826,7 @@ namespace CaptureManager
 						float lPropStretchDest = (float)(lOutputRect.right - lOutputRect.left) / (float)(lOutputRect.bottom - lOutputRect.top);
 
 						bool lIsReady = false;
-											   						 
+
 						for (auto& lIndexID : mdwZOrders)
 						{
 							auto& lInputStream = mInputStreams[lStreamIndex];
@@ -1927,7 +1834,7 @@ namespace CaptureManager
 							UINT lCurrentStreamIndex = lStreamIndex;
 
 							lVideoContext->VideoProcessorSetStreamColorSpace(mVideoProcessor, lStreamIndex, &colorSpace);
-							
+
 							++lStreamIndex;
 
 							ZeroMemory(&lInputStream, sizeof(lInputStream));
@@ -1941,8 +1848,9 @@ namespace CaptureManager
 
 							if (!lItem.mSample)
 								continue;
-							
+
 							lIsReady = true;
+
 
 							auto lVideoNormalizedRect = lItem.mDestVideoNormalizedRect;
 

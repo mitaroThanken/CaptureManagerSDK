@@ -925,7 +925,6 @@ namespace CaptureManager
 				LOG_INVOKE_MF_METHOD(GetMediaTypeHandler,
 					(*aPtrPtrStreamDescriptor), &lHandler);
 
-
 				LOG_INVOKE_MF_METHOD(SetCurrentMediaType,
 					lHandler, lCastMediaTypes[0]);												
 				

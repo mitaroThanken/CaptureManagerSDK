@@ -354,7 +354,7 @@ namespace CaptureManager
 
 					LOG_INVOKE_MF_METHOD(SetUINT32, lSample, MFSampleExtension_CleanPoint, TRUE);
 
-					LOG_INVOKE_MF_METHOD(SetUINT32, lSample, MFSampleExtension_Interlaced, FALSE);
+					LOG_INVOKE_MF_METHOD(SetUINT32, lSample, MFSampleExtension_Interlaced, TRUE);
 
 					LOG_INVOKE_MF_METHOD(SetUINT32, lSample, MFSampleExtension_Discontinuity, mDiscontinuity);
 

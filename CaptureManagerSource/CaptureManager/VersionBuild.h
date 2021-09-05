@@ -1,2 +1,2 @@
 #pragma once
-#define VERSION_BUILD            2779
+#define VERSION_BUILD            2823

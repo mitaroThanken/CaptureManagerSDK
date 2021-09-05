@@ -141,6 +141,10 @@ namespace CaptureManager
 				
 				std::mutex mMutex;
 
+				std::mutex mReadLockMutex;
+
+				std::condition_variable mReadLockCondition;
+
 				SampleGrabberPullSink* mPtrSink;
 
 				CComPtrCustom<IMFMediaType> mMediaType;

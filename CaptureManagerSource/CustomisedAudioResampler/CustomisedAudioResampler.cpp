@@ -402,6 +402,9 @@ namespace CaptureManager
 
 				} while (false);
 
+				if (FAILED(lresult) && lresult == 0xc00d36b5)
+					lresult = S_OK;
+
 				return lresult;
 			}
 

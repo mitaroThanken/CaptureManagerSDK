@@ -331,10 +331,13 @@ namespace CaptureManager
 						}
 					}
 
+					std::lock_guard<std::mutex> lLock(mReadLockMutex);
+
 					writeData(
 						lPtrInputBuffer,
-						lCurrentLength);
+						lMaxLength);
 
+					mReadLockCondition.notify_all();
 
 				} while (false);
 
@@ -631,6 +634,7 @@ namespace CaptureManager
 
 					LOG_CHECK_PTR_MEMORY(aPtrSampleSize);
 
+					std::unique_lock<std::mutex> lLock(mReadLockMutex);
 					
 					LOG_INVOKE_FUNCTION(QueueEvent, 
 						MEStreamSinkRequestSample, 
@@ -638,9 +642,20 @@ namespace CaptureManager
 						S_OK, 
 						nullptr);
 					
-					LOG_INVOKE_FUNCTION(SampleGrabberCall::RegularSampleGrabberCall::ReadWriteBufferRegularSync::readData,
-						aPtrData,
-						aPtrSampleSize);
+					auto lconditionResult = mReadLockCondition.wait_for(
+						lLock,
+						std::chrono::milliseconds(1000));
+
+					if (lconditionResult == std::cv_status::timeout)
+					{
+						lresult = CONTEXT_E_SYNCH_TIMEOUT;
+					}
+					else
+					{
+						LOG_INVOKE_FUNCTION(SampleGrabberCall::RegularSampleGrabberCall::ReadWriteBufferRegularSync::readData,
+							aPtrData,
+							aPtrSampleSize);
+					}
 					
 				} while (false);
 

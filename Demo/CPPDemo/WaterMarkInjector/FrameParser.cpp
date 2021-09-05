@@ -193,6 +193,8 @@ HRESULT CFrameParser::SetFrameType(IMFMediaType* pType)
 
 			if (FAILED(hr))
 				break;
+
+			m_stride = lStride;
         }
     }
     while(false);

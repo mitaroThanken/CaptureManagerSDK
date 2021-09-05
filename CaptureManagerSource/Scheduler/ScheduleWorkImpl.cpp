@@ -151,74 +151,72 @@ namespace CaptureManager
 					return S_OK;
 				}
 
-				//auto lInitTime = MediaFoundation::MediaFoundationManager::MFGetSystemTime();
+				auto lInitTime = MediaFoundation::MediaFoundationManager::MFGetSystemTime();
 
-				//if (mLastTme == 0)
-				//{
-				//	HRESULT lresult;
+				if (mLastTme == 0)
+				{
+					HRESULT lresult;
 
-				//	mLastTme = lInitTime;
+					mLastTme = lInitTime;
 
-				//	mInitTime = lInitTime;
+					mInitTime = lInitTime;
 
-				//	lCycleCount = 0;
+					lCycleCount = 0;
 
-				//	do
-				//	{
+					do
+					{
 
-				//		LOG_INVOKE_MF_FUNCTION(MFScheduleWorkItemEx,
-				//			mAsyncResult,
-				//			-mPartFrameDurationMillSecTimeout,
-				//			&mCancelKey);
+						LOG_INVOKE_MF_FUNCTION(MFScheduleWorkItemEx,
+							mAsyncResult,
+							-mPartFrameDurationMillSecTimeout,
+							&mCancelKey);
 
-				//	} while (false);
+					} while (false);
 
-				//	return S_OK;
-				//}
+					return S_OK;
+				}
 
-				//if (++lCycleCount >= lCycleMax)
-				//{
-				//	if (mPtrCallback != nullptr)
-				//		mPtrCallback->callback();
+				if (++lCycleCount >= lCycleMax)
+				{
+					if (mPtrCallback != nullptr)
+						mPtrCallback->callback();
 
-				//	lCycleCount = 0;
+					lCycleCount = 0;
 
-				//	auto lduration = (lInitTime - mLastTme);
+					auto lduration = (lInitTime - mLastTme);
 
-				//	mShiftTime += lduration - mFrameDuration100nseconds;
+					mShiftTime += lduration - mFrameDuration100nseconds;
 
-				//	mLastTme = lInitTime;
+					mLastTme = lInitTime;
 
-				//	auto lTemp = mShiftTime;
+					auto lTemp = mShiftTime;
 
 
-				//	while (lTemp >= mPartFrameDuration100nsecondsTimeout)
-				//	{
-				//		if (++lCycleCount >= lCycleMax)
-				//			break;
-				//		lTemp -= mPartFrameDuration100nsecondsTimeout;
-				//	}
+					while (lTemp >= mPartFrameDuration100nsecondsTimeout)
+					{
+						if (++lCycleCount >= lCycleMax)
+							break;
+						lTemp -= mPartFrameDuration100nsecondsTimeout;
+					}
 
-				//	//LogPrintOut::getInstance().printOutln(
-				//	//	LogPrintOut::ERROR_LEVEL,
-				//	//	L" mShiftTime: ",
-				//	//	mShiftTime,
-				//	//	L", lduration: ",
-				//	//	lduration,
-				//	//	L", Time: ",
-				//	//	lInitTime - mInitTime,
-				//	//	L", lCycleCount: ",
-				//	//	lCycleCount,
-				//	//	L", J: ",
-				//	//	++j);
-				//}
+					//LogPrintOut::getInstance().printOutln(
+					//	LogPrintOut::ERROR_LEVEL,
+					//	L" mShiftTime: ",
+					//	mShiftTime,
+					//	L", lduration: ",
+					//	lduration,
+					//	L", Time: ",
+					//	lInitTime - mInitTime,
+					//	L", lCycleCount: ",
+					//	lCycleCount,
+					//	L", J: ",
+					//	++j);
+				}
 
 				HRESULT lresult;
 
 				do
 				{
-					if (mPtrCallback != nullptr)
-						mPtrCallback->callback();
 
 					LOG_INVOKE_MF_FUNCTION(MFScheduleWorkItemEx,
 						mAsyncResult,

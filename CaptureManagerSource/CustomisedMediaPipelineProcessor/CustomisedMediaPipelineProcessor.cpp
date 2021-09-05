@@ -2364,7 +2364,7 @@ namespace CaptureManager
 
 					auto lconditionResult = mSourceStreamStartingCondition.wait_for(
 						lLock,
-						std::chrono::seconds(8),
+						std::chrono::seconds(2),
 						[this]{return mSourceStreamCount == 0; });
 										
 					if (lconditionResult == false)
