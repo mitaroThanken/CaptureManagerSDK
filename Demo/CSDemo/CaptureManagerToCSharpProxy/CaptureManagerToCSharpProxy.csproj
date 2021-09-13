@@ -76,7 +76,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CaptureManagerLibrary">
-      <HintPath>bin\CaptureManagerLibrary.dll</HintPath>
+      <HintPath>bin\$(Platform)\$(Configuration)\CaptureManagerLibrary.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="System" />
@@ -158,8 +158,17 @@
     <Compile Include="Util\Win32NativeMethods.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PreBuildEvent>"$(TargetFrameworkSDKToolsDirectory)TlbImp.exe" "$(SolutionDir)Bin\CaptureManager.dll" /out: ../../CaptureManagerLibrary.dll</PreBuildEvent>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <PreBuildEvent>"$(TargetFrameworkSDKToolsDirectory)TlbImp.exe" "$(SolutionDir)Bin\$(Configuration)\Win32\CaptureManager.dll" /out: CaptureManagerLibrary.dll</PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <PreBuildEvent>"$(TargetFrameworkSDKToolsDirectory)TlbImp.exe" "$(SolutionDir)Bin\$(Configuration)\Win32\CaptureManager.dll" /out: CaptureManagerLibrary.dll</PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <PreBuildEvent>"$(TargetFrameworkSDKToolsDirectory)TlbImp.exe" "$(SolutionDir)Bin\$(Configuration)\$(Platform)\CaptureManager.dll" /out: CaptureManagerLibrary.dll</PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <PreBuildEvent>"$(TargetFrameworkSDKToolsDirectory)TlbImp.exe" "$(SolutionDir)Bin\$(Configuration)\$(Platform)\CaptureManager.dll" /out: CaptureManagerLibrary.dll</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
