@@ -7,3 +7,5 @@ CaptureManagerLibrary.dll
 Bin/
 Release/
 CaptureManagerSDK*
+*.vcxproj.user
+

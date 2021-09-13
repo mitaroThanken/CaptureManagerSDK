@@ -55,30 +55,30 @@
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(SolutionDir)CaptureManagerSource\CaptureManager\VersionPropertySheet.props" />
+    <Import Project="$(ProjectDir)..\CaptureManager\VersionPropertySheet.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)CaptureManagerSource\CaptureManager\VersionPropertySheet.props" />
+    <Import Project="$(ProjectDir)..\CaptureManager\VersionPropertySheet.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)CaptureManagerSource\CaptureManager\VersionPropertySheet.props" />
+    <Import Project="$(ProjectDir)..\CaptureManager\VersionPropertySheet.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
-    <Import Project="$(SolutionDir)CaptureManagerSource\CaptureManager\VersionPropertySheet.props" />
+    <Import Project="$(ProjectDir)..\CaptureManager\VersionPropertySheet.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>
@@ -97,7 +97,7 @@
     </Link>
     <Midl>
       <HeaderFileName>%(Filename).h</HeaderFileName>
-      <TypeLibraryName>$(SolutionName).tlb</TypeLibraryName>
+      <TypeLibraryName>CaptureManager.tlb</TypeLibraryName>
       <OutputDirectory>$(OutDir)</OutputDirectory>
     </Midl>
     <PostBuildEvent>
@@ -130,7 +130,7 @@
     </Link>
     <Midl>
       <HeaderFileName>%(Filename).h</HeaderFileName>
-      <TypeLibraryName>$(SolutionName).tlb</TypeLibraryName>
+      <TypeLibraryName>CaptureManager.tlb</TypeLibraryName>
       <OutputDirectory>$(OutDir)</OutputDirectory>
     </Midl>
     <PostBuildEvent>
@@ -163,14 +163,14 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Midl>
-      <TypeLibraryName>$(SolutionName).tlb</TypeLibraryName>
+      <TypeLibraryName>CaptureManager.tlb</TypeLibraryName>
       <OutputDirectory>$(OutDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
     </Midl>
     <PostBuildEvent>
-      <Command>mkdir "$(SolutionDir)CaptureManagerSDK-$(Version_Major).$(Version_Minor).$(Version_Patch)-$(Add_Label)\CaptureManagerTypeInfo" 
-copy "$(OutDir)CaptureManagerTypeInfo.h" "$(SolutionDir)CaptureManagerSDK-$(Version_Major).$(Version_Minor).$(Version_Patch)-$(Add_Label)\CaptureManagerTypeInfo\CaptureManagerTypeInfo.h"
-copy "$(OutDir)CaptureManagerTypeInfo_i.c" "$(SolutionDir)CaptureManagerSDK-$(Version_Major).$(Version_Minor).$(Version_Patch)-$(Add_Label)\CaptureManagerTypeInfo\CaptureManagerTypeInfo_i.c"</Command>
+      <Command>mkdir "$(ProjectDir)..\..\CaptureManagerSDK-$(Version_Major).$(Version_Minor).$(Version_Patch)-$(Add_Label)\CaptureManagerTypeInfo" 
+copy "$(OutDir)CaptureManagerTypeInfo.h" "$(ProjectDir)..\..\CaptureManagerSDK-$(Version_Major).$(Version_Minor).$(Version_Patch)-$(Add_Label)\CaptureManagerTypeInfo\CaptureManagerTypeInfo.h"
+copy "$(OutDir)CaptureManagerTypeInfo_i.c" "$(ProjectDir)..\..\CaptureManagerSDK-$(Version_Major).$(Version_Minor).$(Version_Patch)-$(Add_Label)\CaptureManagerTypeInfo\CaptureManagerTypeInfo_i.c"</Command>
     </PostBuildEvent>
     <PreLinkEvent />
   </ItemDefinitionGroup>
@@ -195,14 +195,14 @@ copy "$(OutDir)CaptureManagerTypeInfo_i.c" "$(SolutionDir)CaptureManagerSDK-$(Ve
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Midl>
-      <TypeLibraryName>$(SolutionName).tlb</TypeLibraryName>
+      <TypeLibraryName>CaptureManager.tlb</TypeLibraryName>
       <OutputDirectory>$(OutDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
     </Midl>
     <PostBuildEvent>
-      <Command>mkdir "$(SolutionDir)CaptureManagerSDK-$(Version_Major).$(Version_Minor).$(Version_Patch)-$(Add_Label)\CaptureManagerTypeInfo" 
-copy "$(OutDir)CaptureManagerTypeInfo.h" "$(SolutionDir)CaptureManagerSDK-$(Version_Major).$(Version_Minor).$(Version_Patch)-$(Add_Label)\CaptureManagerTypeInfo\CaptureManagerTypeInfo.h"
-copy "$(OutDir)CaptureManagerTypeInfo_i.c" "$(SolutionDir)CaptureManagerSDK-$(Version_Major).$(Version_Minor).$(Version_Patch)-$(Add_Label)\CaptureManagerTypeInfo\CaptureManagerTypeInfo_i.c"</Command>
+      <Command>mkdir "$(ProjectDir)..\..\CaptureManagerSDK-$(Version_Major).$(Version_Minor).$(Version_Patch)-$(Add_Label)\CaptureManagerTypeInfo" 
+copy "$(OutDir)CaptureManagerTypeInfo.h" "$(ProjectDir)..\..\CaptureManagerSDK-$(Version_Major).$(Version_Minor).$(Version_Patch)-$(Add_Label)\CaptureManagerTypeInfo\CaptureManagerTypeInfo.h"
+copy "$(OutDir)CaptureManagerTypeInfo_i.c" "$(ProjectDir)..\..\CaptureManagerSDK-$(Version_Major).$(Version_Minor).$(Version_Patch)-$(Add_Label)\CaptureManagerTypeInfo\CaptureManagerTypeInfo_i.c"</Command>
     </PostBuildEvent>
     <PreLinkEvent>
       <Command>
