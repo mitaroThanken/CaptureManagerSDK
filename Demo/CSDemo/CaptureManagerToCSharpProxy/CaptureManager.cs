@@ -45,7 +45,8 @@ namespace CaptureManagerToCSharpProxy
 
         private string getFullFilePath(string aFileName)
         {
-            return System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", "") + "\\" + aFileName;
+            // return System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", "") + "\\" + aFileName;
+            return Path.Combine(Path.GetTempPath(), aFileName);
         }
 
         public CaptureManager()
@@ -64,11 +65,11 @@ namespace CaptureManagerToCSharpProxy
                     mILogPrintOutControl.addPrintOutDestination(
                         //(int)CaptureManagerLibrary.LogLevel.INFO_LEVEL,
                         (int)CaptureManagerLibrary.LogLevel.ERROR_LEVEL,
-                        getFullFilePath("Log.txt"));
+                        getFullFilePath("CaptureManager_Log.txt"));
 
                     mILogPrintOutControl.addPrintOutDestination(
                         (int)CaptureManagerLibrary.LogLevel.INFO_LEVEL,
-                        getFullFilePath("Log.txt"));
+                        getFullFilePath("CaptureManager_Log.txt"));
 #endif
                     mICaptureManagerControl = new CaptureManagerLibrary.CoCaptureManager();
 
@@ -155,11 +156,11 @@ namespace CaptureManagerToCSharpProxy
                     mILogPrintOutControl.addPrintOutDestination(
                         (int)CaptureManagerLibrary.LogLevel.INFO_LEVEL,
                         //(int)CaptureManagerLibrary.LogLevel.ERROR_LEVEL,
-                        getFullFilePath("Log.txt"));
+                        getFullFilePath("CaptureManager_Log.txt"));
 
                     mILogPrintOutControl.addPrintOutDestination(
                         (int)CaptureManagerLibrary.LogLevel.ERROR_LEVEL,
-                        getFullFilePath("Log.txt"));
+                        getFullFilePath("CaptureManager_Log.txt"));
 #endif
                     lGetClassObject(
                         CLSID_CoCaptureManager,
