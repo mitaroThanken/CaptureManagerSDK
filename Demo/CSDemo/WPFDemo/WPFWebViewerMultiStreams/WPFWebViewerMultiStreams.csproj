@@ -117,8 +117,17 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PreBuildEvent>copy "$(SolutionDir)Bin\CaptureManager.dll" "$(TargetDir)CaptureManager.dll"</PreBuildEvent>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <PreBuildEvent>copy "$(SolutionDir)Bin\$(Configuration)\Win32\CaptureManager.dll" "$(TargetDir)CaptureManager.dll"</PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <PreBuildEvent>copy "$(SolutionDir)Bin\$(Configuration)\Win32\CaptureManager.dll" "$(TargetDir)CaptureManager.dll"</PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <PreBuildEvent>copy "$(SolutionDir)Bin\$(Configuration)\$(Platform)\CaptureManager.dll" "$(TargetDir)CaptureManager.dll"</PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <PreBuildEvent>copy "$(SolutionDir)Bin\$(Configuration)\$(Platform)\CaptureManager.dll" "$(TargetDir)CaptureManager.dll"</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
